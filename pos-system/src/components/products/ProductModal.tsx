@@ -146,7 +146,7 @@ export function ProductModal({
               <FormField
                 control={form.control}
                 name="category"
-                render={({ field }) => (
+                render={({ field }: { field: any }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
                     <Select
@@ -174,7 +174,7 @@ export function ProductModal({
               <FormField
                 control={form.control}
                 name="price"
-                render={({ field }) => (
+                render={({ field }: { field: any }) => (
                   <FormItem>
                     <FormLabel>Selling Price (₵)</FormLabel>
                     <FormControl>
@@ -193,7 +193,7 @@ export function ProductModal({
               <FormField
                 control={form.control}
                 name="cost_price"
-                render={({ field }) => (
+                render={({ field }: { field: any }) => (
                   <FormItem>
                     <FormLabel>Cost Price (₵)</FormLabel>
                     <FormControl>
@@ -212,7 +212,7 @@ export function ProductModal({
               <FormField
                 control={form.control}
                 name="sku"
-                render={({ field }) => (
+                render={({ field }: { field: any }) => (
                   <FormItem>
                     <FormLabel>SKU</FormLabel>
                     <FormControl>
@@ -226,7 +226,7 @@ export function ProductModal({
               <FormField
                 control={form.control}
                 name="barcode"
-                render={({ field }) => (
+                render={({ field }: { field: any }) => (
                   <FormItem>
                     <FormLabel>Barcode</FormLabel>
                     <FormControl>
@@ -240,7 +240,7 @@ export function ProductModal({
               <FormField
                 control={form.control}
                 name="quantity"
-                render={({ field }) => (
+                render={({ field }: { field: any }) => (
                   <FormItem>
                     <FormLabel>Initial Quantity</FormLabel>
                     <FormControl>
@@ -259,7 +259,7 @@ export function ProductModal({
               <FormField
                 control={form.control}
                 name="low_stock_threshold"
-                render={({ field }) => (
+                render={({ field }: { field: any }) => (
                   <FormItem>
                     <FormLabel>Low Stock Threshold</FormLabel>
                     <FormControl>
