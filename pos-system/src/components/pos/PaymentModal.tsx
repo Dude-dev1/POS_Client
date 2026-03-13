@@ -5,6 +5,7 @@ import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency } from '@/utils/formatCurrency'
+import { useShiftStore } from '@/store/shiftStore'
 import {
   Dialog,
   DialogContent,
@@ -111,6 +112,13 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
   const handleCheckout = async () => {
     if (!profile) return
     
+    // Check for active shift
+    const activeShift = useShiftStore.getState().currentShift
+    if (!activeShift) {
+      toast.error('You must open a shift before making a sale!')
+      return
+    }
+    
     if (paidAmount < total) {
       // If they haven't added any payments but the current input is valid, auto-add it
       if (payments.length === 0 && parseFloat(amountInput) >= total) {
@@ -135,6 +143,7 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
           tax_amount: taxAmount,
           total_amount: total,
           status: 'COMPLETED',
+          shift_id: activeShift.id,
         })
         .select()
         .single()

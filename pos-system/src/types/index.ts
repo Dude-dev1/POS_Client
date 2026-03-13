@@ -28,6 +28,29 @@ export enum NotificationType {
   SYSTEM = 'SYSTEM',
 }
 
+export interface Shift {
+  id: string;
+  user_id: string;
+  start_time: string;
+  end_time: string | null;
+  opening_cash: number;
+  closing_cash_actual: number | null;
+  closing_cash_expected: number | null;
+  status: 'OPEN' | 'CLOSED';
+  notes: string | null;
+  created_at: string;
+}
+
+export interface Expense {
+  id: string;
+  category: string;
+  amount: number;
+  description: string | null;
+  user_id: string | null;
+  date: string;
+  created_at: string;
+}
+
 export interface ProductVariant {
   id: string;
   name: string;
@@ -86,6 +109,7 @@ export interface Sale {
   tax_amount: number;
   total_amount: number;
   status: OrderStatus;
+  shift_id: string | null;
   created_at: string;
 }
 

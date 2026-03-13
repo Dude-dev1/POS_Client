@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Bell, LogOut, Menu, Moon, Sun, User } from 'lucide-react'
+import { Bell, LogOut, Menu, User } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,10 +17,15 @@ import { useAuthStore } from '@/store/authStore'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
+import { useShiftStore } from '@/store/shiftStore'
+import { ShiftManagementModal } from '../pos/ShiftManagementModal'
 
 export function Navbar() {
   const { profile, signOut } = useAuthStore()
   const [unreadNotifications, setUnreadNotifications] = useState(0)
+  const [isShiftModalOpen, setIsShiftModalOpen] = useState(false)
+  const { currentShift } = useShiftStore()
+  
   const supabase = createClient()
   const router = useRouter()
 
@@ -72,6 +77,16 @@ export function Navbar() {
       </div>
 
       <div className="flex items-center gap-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className={`hidden sm:flex gap-2 items-center h-8 ${currentShift ? 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100' : 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100'}`}
+          onClick={() => setIsShiftModalOpen(true)}
+        >
+          <div className={`h-2 w-2 rounded-full ${currentShift ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+          <span className="text-xs font-bold">{currentShift ? 'Shift Active' : 'No Active Shift'}</span>
+        </Button>
+
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           {unreadNotifications > 0 && (
@@ -118,6 +133,11 @@ export function Navbar() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <ShiftManagementModal 
+        isOpen={isShiftModalOpen} 
+        onClose={() => setIsShiftModalOpen(false)} 
+      />
     </nav>
   )
 }
