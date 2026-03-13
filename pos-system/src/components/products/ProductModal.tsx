@@ -31,7 +31,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'react-hot-toast'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Plus, Trash2 } from 'lucide-react'
+import { useFieldArray } from 'react-hook-form'
+import { Separator } from '@/components/ui/separator'
 
 interface ProductModalProps {
   isOpen: boolean
@@ -62,7 +64,13 @@ export function ProductModal({
       quantity: 0,
       low_stock_threshold: 5,
       is_active: true,
+      variants: [],
     },
+  })
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'variants',
   })
 
   useEffect(() => {
@@ -77,7 +85,10 @@ export function ProductModal({
         cost_price: Number(product.cost_price || 0),
         quantity: product.quantity,
         low_stock_threshold: product.low_stock_threshold,
-        is_active: product.is_active,
+        variants: (product.variants || []).map(v => ({
+          ...v,
+          sku: v.sku || '',
+        })),
       })
     } else {
       form.reset({
@@ -91,6 +102,7 @@ export function ProductModal({
         quantity: 0,
         low_stock_threshold: 5,
         is_active: true,
+        variants: [],
       })
     }
   }, [product, form])
@@ -288,6 +300,104 @@ export function ProductModal({
                 </FormItem>
               )}
             />
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Product Variants</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => append({ id: Math.random().toString(36).substring(7), name: '', sku: '', price: form.getValues('price'), quantity: 0 })}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add Variant
+                </Button>
+              </div>
+              <Separator />
+              
+              <div className="space-y-3">
+                {fields.map((field, index) => (
+                  <div key={field.id} className="grid grid-cols-12 gap-2 items-end border p-3 rounded-lg bg-gray-50/50">
+                    <div className="col-span-4">
+                      <FormField
+                        control={form.control}
+                        name={`variants.${index}.name`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[10px] uppercase">Name (e.g. XL, Blue)</FormLabel>
+                            <FormControl>
+                              <Input className="h-8 text-xs" {...field} />
+                            </FormControl>
+                            <FormMessage className="text-[10px]" />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="col-span-3">
+                      <FormField
+                        control={form.control}
+                        name={`variants.${index}.sku`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[10px] uppercase">SKU</FormLabel>
+                            <FormControl>
+                              <Input className="h-8 text-xs font-mono" {...field} />
+                            </FormControl>
+                            <FormMessage className="text-[10px]" />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <FormField
+                        control={form.control}
+                        name={`variants.${index}.price`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[10px] uppercase">Price</FormLabel>
+                            <FormControl>
+                              <Input type="number" step="0.01" className="h-8 text-xs" {...field} />
+                            </FormControl>
+                            <FormMessage className="text-[10px]" />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <FormField
+                        control={form.control}
+                        name={`variants.${index}.quantity`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[10px] uppercase">Qty</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                className="h-8 text-xs" 
+                                {...field} 
+                                disabled={!!product} // Quantity adjusted via inventory
+                              />
+                            </FormControl>
+                            <FormMessage className="text-[10px]" />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="col-span-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                        onClick={() => remove(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>

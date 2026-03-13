@@ -133,7 +133,16 @@ export function ProductTable() {
             ) : filteredProducts.length > 0 ? (
               filteredProducts.map((product) => (
                 <TableRow key={product.id}>
-                  <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex flex-col">
+                      <span>{product.name}</span>
+                      {product.variants && product.variants.length > 0 && (
+                        <span className="text-[10px] text-primary font-bold">
+                          {product.variants.length} options matching
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>{product.category}</TableCell>
                   <TableCell className="font-mono text-xs">{product.sku || '-'}</TableCell>
                   <TableCell>

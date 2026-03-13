@@ -10,12 +10,23 @@ import Image from 'next/image'
 
 interface ProductCardProps {
   product: Product
+  onSelect?: (product: Product) => void
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, onSelect }: ProductCardProps) {
   const addItem = useCartStore((state) => state.addItem)
   const isOutOfStock = product.quantity <= 0
   const isLowStock = product.quantity <= product.low_stock_threshold && !isOutOfStock
+  const isHasVariants = product.variants && product.variants.length > 0
+
+  const handleClick = () => {
+    if (isOutOfStock) return
+    if (isHasVariants && onSelect) {
+      onSelect(product)
+    } else {
+      addItem(product)
+    }
+  }
 
   return (
     <Card
@@ -23,7 +34,7 @@ export function ProductCard({ product }: ProductCardProps) {
         'overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-primary h-full flex flex-col',
         isOutOfStock && 'opacity-60 grayscale cursor-not-allowed hover:ring-0'
       )}
-      onClick={() => !isOutOfStock && addItem(product)}
+      onClick={handleClick}
     >
       <div className="relative aspect-square bg-gray-100 flex items-center justify-center">
         {product.image_url ? (
@@ -42,6 +53,11 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
           {isLowStock && (
             <Badge variant="warning" className="text-[10px] bg-amber-500 hover:bg-amber-600">Low Stock</Badge>
+          )}
+          {isHasVariants && (
+            <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary border-primary/20">
+              {product.variants?.length} Options
+            </Badge>
           )}
         </div>
       </div>

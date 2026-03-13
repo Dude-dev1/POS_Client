@@ -18,6 +18,13 @@ export const productSchema = z.object({
   quantity: z.coerce.number().int().min(0, 'Quantity must be 0 or greater'),
   low_stock_threshold: z.coerce.number().int().min(0, 'Threshold must be 0 or greater'),
   is_active: z.boolean().default(true),
+  variants: z.array(z.object({
+    id: z.string().optional(),
+    name: z.string().min(1, 'Variant name is required'),
+    sku: z.string().optional().or(z.literal('')),
+    price: z.coerce.number().min(0),
+    quantity: z.coerce.number().int().min(0),
+  })).optional().default([]),
 })
 
 export type ProductFormValues = z.infer<typeof productSchema>

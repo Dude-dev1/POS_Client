@@ -28,6 +28,14 @@ export enum NotificationType {
   SYSTEM = 'SYSTEM',
 }
 
+export interface ProductVariant {
+  id: string;
+  name: string;
+  sku: string | null;
+  price: number;
+  quantity: number;
+}
+
 export interface Profile {
   id: string;
   email: string;
@@ -51,6 +59,7 @@ export interface Product {
   low_stock_threshold: number;
   image_url: string | null;
   is_active: boolean;
+  variants: ProductVariant[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -160,4 +169,5 @@ export interface Settings {
 
 export interface CartItem extends Product {
   cartQuantity: number;
+  variantId?: string | null;
 }

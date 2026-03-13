@@ -175,15 +175,40 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
 
       // 4. Update Product Stock & Notifications
       for (const item of items) {
-        const newQuantity = item.quantity - item.cartQuantity
-        await supabase.from('products').update({ quantity: newQuantity }).eq('id', item.id)
-
-        if (newQuantity <= item.low_stock_threshold) {
-          await supabase.from('notifications').insert({
-            title: 'Low Stock Alert',
-            message: `${item.name} is low on stock (${newQuantity} remaining)`,
-            type: newQuantity <= 0 ? 'OUT_OF_STOCK' : 'LOW_STOCK',
+        if (item.variantId && item.variants) {
+          // Update specific variant
+          const updatedVariants = item.variants.map(v => {
+            if (v.id === item.variantId) {
+              const newVQty = v.quantity - item.cartQuantity
+              return { ...v, quantity: newVQty }
+            }
+            return v
           })
+          
+          const targetVariant = item.variants.find(v => v.id === item.variantId)
+          const newVQty = (targetVariant?.quantity || 0) - item.cartQuantity
+
+          await supabase.from('products').update({ variants: updatedVariants }).eq('id', item.id)
+
+          if (newVQty <= item.low_stock_threshold) {
+            await supabase.from('notifications').insert({
+              title: 'Low Stock Alert',
+              message: `${item.name} (${targetVariant?.name}) is low on stock (${newVQty} remaining)`,
+              type: newVQty <= 0 ? 'OUT_OF_STOCK' : 'LOW_STOCK',
+            })
+          }
+        } else {
+          // Update main product
+          const newQuantity = item.quantity - item.cartQuantity
+          await supabase.from('products').update({ quantity: newQuantity }).eq('id', item.id)
+
+          if (newQuantity <= item.low_stock_threshold) {
+            await supabase.from('notifications').insert({
+              title: 'Low Stock Alert',
+              message: `${item.name} is low on stock (${newQuantity} remaining)`,
+              type: newQuantity <= 0 ? 'OUT_OF_STOCK' : 'LOW_STOCK',
+            })
+          }
         }
       }
 

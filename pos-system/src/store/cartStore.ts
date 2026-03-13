@@ -7,7 +7,7 @@ interface CartState {
   customerId: string | null
   discount: number
   discountType: 'FIXED' | 'PERCENTAGE'
-  addItem: (product: Product) => void
+  addItem: (product: Product, variantId?: string | null) => void
   removeItem: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
   clearCart: () => void
@@ -30,22 +30,44 @@ export const useCartStore = create<CartState>()(
       discount: 0,
       discountType: 'FIXED',
 
-      addItem: (product: Product) => {
-        const items = get().items
-        const existingItem = items.find((item) => item.id === product.id)
+  addItem: (product: Product, variantId?: string | null) => {
+    const items = get().items
+    // If it has a variant, uniqueness is product.id + variantId
+    const existingItem = items.find((item) => 
+      item.id === product.id && item.variantId === variantId
+    )
 
-        if (existingItem) {
-          set({
-            items: items.map((item) =>
-              item.id === product.id
-                ? { ...item, cartQuantity: item.cartQuantity + 1 }
-                : item
-            ),
-          })
-        } else {
-          set({ items: [...items, { ...product, cartQuantity: 1 }] })
+    if (existingItem) {
+      set({
+        items: items.map((item) =>
+          (item.id === product.id && item.variantId === variantId)
+            ? { ...item, cartQuantity: item.cartQuantity + 1 }
+            : item
+        ),
+      })
+    } else {
+      // Find variant details if variantId is provided
+      let price = product.price
+      let name = product.name
+      if (variantId && product.variants) {
+        const variant = product.variants.find(v => v.id === variantId)
+        if (variant) {
+          price = variant.price
+          name = `${product.name} (${variant.name})`
         }
-      },
+      }
+      
+      set({ 
+        items: [...items, { 
+          ...product, 
+          name, 
+          price, 
+          cartQuantity: 1, 
+          variantId 
+        }] 
+      })
+    }
+  },
 
       removeItem: (productId: string) => {
         set({ items: get().items.filter((item) => item.id !== productId) })

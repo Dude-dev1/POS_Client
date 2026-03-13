@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -60,6 +59,16 @@ export function StockAdjustmentModal({
     },
   })
 
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (open && product?.variants && product.variants.length > 0) {
+      setSelectedVariantId(product.variants[0].id)
+    } else {
+      setSelectedVariantId(null)
+    }
+  }, [open, product])
+
   useEffect(() => {
     if (open) {
       form.reset({
@@ -75,25 +84,39 @@ export function StockAdjustmentModal({
     setLoading(true)
 
     try {
-      const currentQuantity = product.quantity
-      let nextQuantity = currentQuantity
+      // 1. Update stock (Product or Variant)
+      let updateData: any = {}
+      let oldStock = product.quantity
+      let newStock = product.quantity
 
-      if (values.type === 'ADD') {
-        nextQuantity += values.quantity
-      } else if (values.type === 'REMOVE') {
-        nextQuantity -= values.quantity
+      if (selectedVariantId && product.variants) {
+        const updatedVariants = product.variants.map(v => {
+          if (v.id === selectedVariantId) {
+            oldStock = v.quantity
+            let vNextQty = v.quantity
+            if (values.type === 'ADD') vNextQty += values.quantity
+            else if (values.type === 'REMOVE') vNextQty -= values.quantity
+            else vNextQty = values.quantity
+
+            if (vNextQty < 0) throw new Error('Variant quantity cannot be negative')
+            newStock = vNextQty
+            return { ...v, quantity: vNextQty }
+          }
+          return v
+        })
+        updateData = { variants: updatedVariants }
       } else {
-        nextQuantity = values.quantity
+        if (values.type === 'ADD') newStock += values.quantity
+        else if (values.type === 'REMOVE') newStock -= values.quantity
+        else newStock = values.quantity
+
+        if (newStock < 0) throw new Error('Quantity cannot be negative')
+        updateData = { quantity: newStock }
       }
 
-      if (nextQuantity < 0) {
-        throw new Error('Quantity cannot be negative')
-      }
-
-      // 1. Update Product Quantity
       const { error: productError } = await supabase
         .from('products')
-        .update({ quantity: nextQuantity })
+        .update(updateData)
         .eq('id', product.id)
 
       if (productError) throw productError
@@ -104,12 +127,16 @@ export function StockAdjustmentModal({
           entity_type: 'PRODUCT',
           entity_id: product.id,
           action: 'STOCK_ADJUSTMENT',
-          old_data: { quantity: currentQuantity },
+          old_data: { 
+            quantity: oldStock, 
+            variant_id: selectedVariantId 
+          },
           new_data: { 
-            quantity: nextQuantity, 
+            quantity: newStock, 
             adjustment_type: values.type, 
             adjustment_value: values.quantity,
-            reason: values.reason 
+            reason: values.reason,
+            variant_id: selectedVariantId
           },
         },
       ])
@@ -132,12 +159,35 @@ export function StockAdjustmentModal({
         <DialogHeader>
           <DialogTitle>Adjust Stock</DialogTitle>
           <DialogDescription>
-            {product?.name} (Current: {product?.quantity})
+            {product?.name} (Current: {product && (selectedVariantId ? product.variants?.find(v => v.id === selectedVariantId)?.quantity : product.quantity)})
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+            {product?.variants && product.variants.length > 0 && (
+              <div className="space-y-2">
+                <FormLabel>Select Variant to Adjust</FormLabel>
+                <Select
+                  value={selectedVariantId || ''}
+                  onValueChange={setSelectedVariantId}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select variant" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {product.variants.map(v => (
+                      <SelectItem key={v.id} value={v.id}>
+                        {v.name} (Current: {v.quantity})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <FormField
               control={form.control}
               name="type"
