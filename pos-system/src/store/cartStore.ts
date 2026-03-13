@@ -11,7 +11,8 @@ interface CartState {
   removeItem: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
   clearCart: () => void
-  setCustomer: (customerId: string | null) => void
+  setItems: (items: CartItem[]) => void
+  setCustomerId: (customerId: string | null) => void
   setDiscount: (discount: number, type: 'FIXED' | 'PERCENTAGE') => void
   calculateTotals: () => {
     subtotal: number
@@ -64,7 +65,9 @@ export const useCartStore = create<CartState>()(
 
       clearCart: () => set({ items: [], customerId: null, discount: 0, discountType: 'FIXED' }),
 
-      setCustomer: (customerId) => set({ customerId }),
+      setItems: (items) => set({ items }),
+
+      setCustomerId: (customerId) => set({ customerId }),
 
       setDiscount: (discount, discountType) => set({ discount, discountType }),
 

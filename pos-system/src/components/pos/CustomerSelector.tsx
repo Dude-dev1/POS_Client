@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button'
 
 export function CustomerSelector() {
   const [customers, setCustomers] = useState<Customer[]>([])
-  const { customerId, setCustomer } = useCartStore()
+  const { customerId, setCustomerId } = useCartStore()
   const supabase = createClient()
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export function CustomerSelector() {
       <div className="flex-1">
         <Select
           value={customerId || 'walk-in'}
-          onValueChange={(val) => setCustomer(val === 'walk-in' ? null : val)}
+          onValueChange={(val) => setCustomerId(val === 'walk-in' ? null : val)}
         >
           <SelectTrigger className="w-full">
             <div className="flex items-center gap-2">

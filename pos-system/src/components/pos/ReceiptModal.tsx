@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Printer, Download, RefreshCw, Loader2 } from 'lucide-react'
+import { Printer, Download, RefreshCw, Loader2, Smartphone, Mail } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 
 interface ReceiptModalProps {
@@ -24,7 +24,7 @@ interface ReceiptModalProps {
 export function ReceiptModal({ isOpen, onClose, saleId }: ReceiptModalProps) {
   const [sale, setSale] = useState<any>(null)
   const [items, setItems] = useState<any[]>([])
-  const [payment, setPayment] = useState<any>(null)
+  const [payments, setPayments] = useState<any[]>([])
   const [settings, setSettings] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
@@ -35,24 +35,67 @@ export function ReceiptModal({ isOpen, onClose, saleId }: ReceiptModalProps) {
       const [
         { data: saleData },
         { data: itemsData },
-        { data: paymentData },
+        { data: paymentsData },
         { data: settingsData }
       ] = await Promise.all([
         supabase.from('sales').select('*, profiles(full_name), customers(full_name)').eq('id', saleId).single(),
         supabase.from('sale_items').select('*, products(name)').eq('sale_id', saleId),
-        supabase.from('payments').select('*').eq('sale_id', saleId).single(),
+        supabase.from('payments').select('*').eq('sale_id', saleId),
         supabase.from('settings').select('*').limit(1).single()
       ])
 
       if (saleData) setSale(saleData)
       if (itemsData) setItems(itemsData)
-      if (paymentData) setPayment(paymentData)
+      if (paymentsData) setPayments(paymentsData)
       if (settingsData) setSettings(settingsData)
       setLoading(false)
     }
 
     if (saleId) fetchData()
   }, [saleId, supabase])
+
+  const generateOrderSummary = () => {
+    if (!sale || !settings) return ''
+    
+    let text = `*${settings.store_name}*\n`
+    text += `${settings.store_address}\n`
+    text += `Tel: ${settings.store_phone}\n\n`
+    text += `RECEIPT: ${saleId.slice(0, 8).toUpperCase()}\n`
+    text += `DATE: ${formatDate(sale.created_at)}\n`
+    text += `CASHIER: ${sale.profiles?.full_name || 'Staff'}\n`
+    if (sale.customers) text += `CUSTOMER: ${sale.customers.full_name}\n`
+    
+    text += `\n-----------------------\n`
+    items.forEach(item => {
+      text += `${item.products.name}\n`
+      text += `${item.quantity} x ${formatCurrency(item.unit_price)} = ${formatCurrency(item.subtotal)}\n`
+    })
+    text += `-----------------------\n`
+    
+    text += `SUBTOTAL: ${formatCurrency(sale.subtotal)}\n`
+    text += `DISCOUNT: -${formatCurrency(sale.discount_amount)}\n`
+    text += `VAT (15%): ${formatCurrency(sale.tax_amount)}\n`
+    text += `*TOTAL: ${formatCurrency(sale.total_amount)}*\n\n`
+    
+    text += `PAYMENT METHODS:\n`
+    payments.forEach(p => {
+      text += `- ${p.method.replace('_', ' ')}: ${formatCurrency(p.amount)}\n`
+    })
+    
+    text += `\n${settings.receipt_footer || 'Thank you for your business!'}`
+    return text
+  }
+
+  const handleShareWhatsApp = () => {
+    const text = encodeURIComponent(generateOrderSummary())
+    window.open(`https://wa.me/?text=${text}`, '_blank')
+  }
+
+  const handleShareEmail = () => {
+    const subject = encodeURIComponent(`${settings?.store_name} - Receipt ${saleId.slice(0, 8)}`)
+    const body = encodeURIComponent(generateOrderSummary())
+    window.location.href = `mailto:?subject=${subject}&body=${body}`
+  }
 
   const handleDownloadPDF = () => {
     if (!sale) return
@@ -160,54 +203,58 @@ export function ReceiptModal({ isOpen, onClose, saleId }: ReceiptModalProps) {
 
               <Separator className="my-3 border-dashed" />
 
-              <div className="text-xs space-y-1">
-                <div className="flex justify-between">
-                  <span className="uppercase">Payment Method:</span>
-                  <span className="font-bold">{payment?.method.replace('_', ' ')}</span>
-                </div>
-                {payment?.method === 'CASH' && (
-                  <>
+              <div className="text-xs space-y-2">
+                <p className="uppercase font-bold text-[10px] text-muted-foreground">Payment Details</p>
+                {payments.map((p, i) => (
+                  <div key={i} className="flex flex-col border-b border-gray-100 pb-1 last:border-0">
                     <div className="flex justify-between">
-                      <span className="uppercase">Amount Tendered:</span>
-                      <span>{formatCurrency(payment.details?.amount_tendered || 0)}</span>
+                      <span className="uppercase">{p.method.replace('_', ' ')}</span>
+                      <span className="font-bold">{formatCurrency(p.amount)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="uppercase">Change:</span>
-                      <span>{formatCurrency(payment.details?.change || 0)}</span>
-                    </div>
-                  </>
-                )}
-                {payment?.provider_reference && (
-                  <div className="flex justify-between">
-                    <span className="uppercase">Reference:</span>
-                    <span className="font-mono">{payment.provider_reference}</span>
+                    {p.method === 'CASH' && p.details?.change > 0 && (
+                      <div className="flex justify-between text-[10px] text-muted-foreground italic pl-2">
+                        <span>Tendered: {formatCurrency(p.details.amount_tendered)}</span>
+                        <span>Change: {formatCurrency(p.details.change)}</span>
+                      </div>
+                    )}
+                    {p.provider_reference && (
+                      <div className="text-[10px] text-muted-foreground pl-2 font-mono">
+                        Ref: {p.provider_reference}
+                      </div>
+                    )}
                   </div>
-                )}
+                ))}
               </div>
 
               <div className="mt-8 text-center">
                 <p className="text-xs italic">{settings?.receipt_footer || 'Thank you for your business!'}</p>
-                <div className="mt-4 opacity-30 flex justify-center grayscale">
-                   {/* Barcode would go here in physical receipt */}
-                </div>
               </div>
             </div>
 
-            <div className="p-4 bg-gray-50 flex gap-2 border-t print:hidden">
-              <Button variant="outline" className="flex-1" onClick={handlePrint}>
-                <Printer className="mr-2 h-4 w-4" /> Print
-              </Button>
-              <Button variant="outline" className="flex-1" onClick={handleDownloadPDF}>
-                <Download className="mr-2 h-4 w-4" /> PDF
-              </Button>
-            </div>
-            <div className="p-4 pt-0 bg-gray-50 flex print:hidden">
+            <div className="px-4 py-3 bg-gray-50 flex flex-col gap-3 border-t print:hidden">
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="flex-1 text-[10px]" onClick={handleShareWhatsApp}>
+                  <Smartphone className="mr-1 h-3 w-3" /> WhatsApp
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1 text-[10px]" onClick={handleShareEmail}>
+                  <Mail className="mr-1 h-3 w-3" /> Email
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="flex-1" onClick={handlePrint}>
+                  <Printer className="mr-2 h-4 w-4" /> Print
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1" onClick={handleDownloadPDF}>
+                  <Download className="mr-2 h-4 w-4" /> PDF
+                </Button>
+              </div>
               <Button className="w-full h-11 font-bold" onClick={onClose}>
                 <RefreshCw className="mr-2 h-4 w-4" /> New Sale
               </Button>
             </div>
           </div>
         )}
+
       </DialogContent>
     </Dialog>
   )

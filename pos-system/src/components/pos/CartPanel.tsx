@@ -7,9 +7,12 @@ import { CustomerSelector } from './CustomerSelector'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCurrency } from '@/utils/formatCurrency'
-import { ShoppingCart, Trash2, CreditCard, Percent, Tag } from 'lucide-react'
+import { ShoppingCart, Trash2, CreditCard, Percent, Tag, PauseCircle, ShoppingBag } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { PaymentModal } from './PaymentModal'
+import { useHoldStore } from '@/store/holdStore'
+import { HeldOrdersModal } from './HeldOrdersModal'
+import { toast } from 'react-hot-toast'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,10 +23,20 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 
 export function CartPanel() {
-  const { items, clearCart, discount, discountType, setDiscount, calculateTotals } = useCartStore()
+  const { items, clearCart, discount, discountType, setDiscount, calculateTotals, customerId } = useCartStore()
+  const { holdCurrentCart, heldCarts } = useHoldStore()
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
+  const [isHeldOrdersOpen, setIsHeldOrdersOpen] = useState(false)
   const [showDiscountInput, setShowDiscountInput] = useState(false)
   const [tempDiscount, setTempDiscount] = useState(discount.toString())
+
+  const handleHold = () => {
+    if (items.length === 0) return
+    const label = prompt('Enter a label for this order (optional):') || `Order #${heldCarts.length + 1}`
+    holdCurrentCart(items, customerId, discount, discountType, label)
+    clearCart()
+    toast.success('Order held successfully')
+  }
 
   const { subtotal, discountAmount, taxAmount, total } = calculateTotals()
 
@@ -41,15 +54,30 @@ export function CartPanel() {
           <CardTitle className="text-lg">Shopping Cart</CardTitle>
           <Badge variant="secondary" className="ml-1 rounded-full">{items.length}</Badge>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-red-500 hover:bg-red-50"
-          onClick={clearCart}
-          disabled={items.length === 0}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-primary hover:bg-primary/10 relative"
+            onClick={() => setIsHeldOrdersOpen(true)}
+          >
+            <ShoppingBag className="h-4 w-4" />
+            {heldCarts.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
+                {heldCarts.length}
+              </span>
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-red-500 hover:bg-red-50"
+            onClick={clearCart}
+            disabled={items.length === 0}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       </CardHeader>
 
       <div className="p-4 border-b">
@@ -130,19 +158,33 @@ export function CartPanel() {
           </div>
         </div>
 
-        <Button
-          className="w-full h-12 text-lg font-bold shadow-lg"
-          disabled={items.length === 0}
-          onClick={() => setIsPaymentModalOpen(true)}
-        >
-          <CreditCard className="mr-2 h-5 w-5" />
-          Checkout
-        </Button>
+        <div className="grid grid-cols-3 gap-2 w-full">
+          <Button
+            variant="outline"
+            className="h-12 border-dashed border-primary/30 hover:border-primary text-primary"
+            disabled={items.length === 0}
+            onClick={handleHold}
+          >
+            <PauseCircle className="h-5 w-5" />
+          </Button>
+          <Button
+            className="col-span-2 h-12 text-lg font-bold shadow-lg"
+            disabled={items.length === 0}
+            onClick={() => setIsPaymentModalOpen(true)}
+          >
+            <CreditCard className="mr-2 h-5 w-5" />
+            Checkout
+          </Button>
+        </div>
       </CardFooter>
 
       <PaymentModal
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
+      />
+      <HeldOrdersModal
+        isOpen={isHeldOrdersOpen}
+        onClose={() => setIsHeldOrdersOpen(false)}
       />
     </Card>
   )
