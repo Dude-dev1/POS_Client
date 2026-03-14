@@ -7,6 +7,7 @@ import { formatCurrency } from '@/utils/formatCurrency'
 import { useCartStore } from '@/store/cartStore'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
+import { ProductImage } from '@/components/shared/ProductImage'
 
 interface ProductCardProps {
   product: Product
@@ -36,17 +37,11 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
       )}
       onClick={handleClick}
     >
-      <div className="relative aspect-square bg-muted flex items-center justify-center">
-        {product.image_url ? (
-          <Image
-            src={product.image_url}
-            alt={product.name}
-            fill
-            className="object-cover"
-          />
-        ) : (
-          <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">No Image</span>
-        )}
+      <div className="relative aspect-square">
+        <ProductImage 
+          src={product.image_url} 
+          alt={product.name} 
+        />
         <div className="absolute top-2 right-2 flex flex-col gap-1">
           {isOutOfStock && (
             <Badge variant="destructive" className="text-[10px]">Out of Stock</Badge>

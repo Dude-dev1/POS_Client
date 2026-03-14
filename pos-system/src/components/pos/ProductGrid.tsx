@@ -13,6 +13,9 @@ import { VariantSelectorModal } from './VariantSelectorModal'
 import { BarcodeScannerModal } from './BarcodeScannerModal'
 import { toast } from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
+import { useConnectivity } from '../shared/ConnectivityProvider'
+import { db } from '@/lib/dexie/db'
+import { useBarcodeScanner } from '@/hooks/useBarcodeScanner'
 
 export function ProductGrid() {
   const [products, setProducts] = useState<Product[]>([])
@@ -27,25 +30,56 @@ export function ProductGrid() {
   const addItem = useCartStore((state) => state.addItem)
   const supabase = createClient()
 
+  const { isOnline } = useConnectivity()
+
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('is_active', true)
-        .order('name')
+      
+      try {
+        if (!isOnline) {
+          // Fetch from Dexie
+          const localProducts = await db.products.toArray()
+          setProducts(localProducts)
+          const cats = Array.from(new Set(localProducts.map((p) => p.category)))
+          setCategories(['all', ...cats])
+          setLoading(false)
+          return
+        }
 
-      if (data) {
-        setProducts(data)
-        const cats = Array.from(new Set(data.map((p) => p.category)))
+        // Fetch from Supabase
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('is_active', true)
+          .order('name')
+
+        if (error) throw error
+
+        if (data) {
+          setProducts(data)
+          const cats = Array.from(new Set(data.map((p) => p.category)))
+          setCategories(['all', ...cats])
+          
+          // Background: update local cache
+          db.products.clear().then(() => {
+            db.products.bulkPut(data).catch(console.error)
+          })
+        }
+      } catch (err: any) {
+        console.error('Error fetching products:', err)
+        // Fallback to local
+        const localProducts = await db.products.toArray()
+        setProducts(localProducts)
+        const cats = Array.from(new Set(localProducts.map((p) => p.category)))
         setCategories(['all', ...cats])
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
 
     fetchProducts()
-  }, [supabase])
+  }, [supabase, isOnline])
 
   const filteredProducts = products.filter((p) => {
     const matchesSearch =
@@ -80,6 +114,12 @@ export function ProductGrid() {
       toast.error('Product not found for code: ' + barcode)
     }
   }
+
+  // Global barcode scanner listener
+  useBarcodeScanner({
+    onScan: handleBarcodeScan,
+    disabled: isScannerOpen || isVariantModalOpen
+  })
 
   return (
     <div className="flex flex-col h-full gap-4">
@@ -120,7 +160,7 @@ export function ProductGrid() {
         </Tabs>
       </div>
 
-      <div className="flex-1 overflow-y-auto min-h-0 pr-1">
+      <div className="flex-1 overflow-y-auto min-h-0 p-1">
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {Array.from({ length: 15 }).map((_, i) => (

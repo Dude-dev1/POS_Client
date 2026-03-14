@@ -146,7 +146,18 @@ export interface SaleItem {
   quantity: number;
   unit_price: number;
   subtotal: number;
+  quantity_returned: number;
   created_at: string;
+}
+
+export interface Return {
+  id: string;
+  sale_id: string;
+  user_id: string;
+  reason: string;
+  amount_refunded: number;
+  created_at: string;
+  sale_items?: SaleItem[];
 }
 
 export interface Payment {

@@ -98,7 +98,12 @@ export function UserModal({ user, open, onOpenChange, onSuccess }: UserModalProp
         })
 
         const data = await response.json()
-        if (!response.ok) throw new Error(data.error || 'Failed to create user')
+        if (!response.ok) {
+          const msg = data.error || data.message || 'Failed to create user'
+          const detail = data.details ? `\n${data.details}` : ''
+          throw new Error(msg + detail)
+        }
+        if (data.warning) toast.error(`Warning: ${data.warning}`)
 
         toast.success('User created successfully')
       }

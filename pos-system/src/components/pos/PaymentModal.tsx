@@ -6,6 +6,8 @@ import { useAuthStore } from '@/store/authStore'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { useShiftStore } from '@/store/shiftStore'
+import { useConnectivity } from '@/components/shared/ConnectivityProvider'
+import { db } from '@/lib/dexie/db'
 import {
   Dialog,
   DialogContent,
@@ -54,6 +56,7 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
   const [payments, setPayments] = useState<PaymentEntry[]>([])
 
   const supabase = createClient()
+  const { isOnline } = useConnectivity()
   const { subtotal, discountAmount, taxAmount, total } = calculateTotals()
   
   const paidAmount = payments.reduce((sum, p) => sum + p.amount, 0)
@@ -129,6 +132,58 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
 
     setIsLoading(true)
     try {
+      const finalPayments = payments.length > 0 ? payments : [{
+        method: currentMethod as any,
+        amount: total,
+        details: currentMethod === 'CASH' 
+          ? { amount_tendered: parseFloat(amountInput), change } 
+          : (currentMethod === 'MOBILE_MONEY' ? { network: momoNetwork, reference: momoRef } : { reference: cardRef })
+      }]
+
+      if (!isOnline) {
+        // Handle Offline Checkout
+        const pendingSale = {
+          saleData: {
+            customer_id: customerId,
+            user_id: profile.id,
+            subtotal,
+            discount_amount: discountAmount,
+            discount_type: discountType,
+            tax_amount: taxAmount,
+            total_amount: total,
+            status: 'COMPLETED' as any,
+            shift_id: activeShift.id,
+          },
+          items: items.map(item => ({
+            product_id: item.id,
+            quantity: item.cartQuantity,
+            unit_price: item.price,
+            subtotal: item.price * item.cartQuantity,
+            product_name: item.name,
+            quantity_returned: 0
+          } as any)),
+          createdAt: new Date().toISOString(),
+          status: 'pending' as const
+        }
+
+        await db.pendingSales.add(pendingSale)
+
+        // Update local stock in Dexie
+        for (const item of items) {
+          const localProduct = await db.products.get(item.id)
+          if (localProduct) {
+            await db.products.update(item.id, { 
+              quantity: localProduct.quantity - item.cartQuantity 
+            })
+          }
+        }
+
+        toast.success('Saved offline! Will sync when online.', { icon: '💾' })
+        resetAndClose()
+        return
+      }
+
+      // Online Checkout (Existing Logic)
       // 1. Create Sale
       const { data: sale, error: saleError } = await supabase
         .from('sales')
@@ -161,14 +216,6 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
       if (itemsError) throw itemsError
 
       // 3. Create Payments
-      const finalPayments = payments.length > 0 ? payments : [{
-        method: currentMethod as any,
-        amount: total,
-        details: currentMethod === 'CASH' 
-          ? { amount_tendered: parseFloat(amountInput), change } 
-          : (currentMethod === 'MOBILE_MONEY' ? { network: momoNetwork, reference: momoRef } : { reference: cardRef })
-      }]
-
       for (const p of finalPayments) {
         const { error: paymentError } = await supabase.from('payments').insert({
           sale_id: sale.id,

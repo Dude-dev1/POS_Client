@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Printer, Download, RefreshCw, Loader2, Smartphone, Mail } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
+import { ThermalReceipt } from './ThermalReceipt'
 
 interface ReceiptModalProps {
   isOpen: boolean
@@ -128,13 +129,16 @@ export function ReceiptModal({ isOpen, onClose, saleId }: ReceiptModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-sm p-0 overflow-hidden">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Order Receipt</DialogTitle>
+        </DialogHeader>
         {loading ? (
           <div className="h-96 flex items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="flex flex-col">
-            <div id="receipt-content" className="p-6 text-sm font-mono print:p-0">
+          <div className="flex flex-col print:hidden max-h-[85vh]">
+            <div id="receipt-content" className="p-6 text-sm font-mono overflow-y-auto flex-1">
               <div className="text-center mb-4">
                 <h2 className="text-xl font-bold uppercase">{settings?.store_name || 'POS SYSTEM'}</h2>
                 <p className="text-xs text-muted-foreground">{settings?.store_address}</p>
@@ -255,6 +259,13 @@ export function ReceiptModal({ isOpen, onClose, saleId }: ReceiptModalProps) {
           </div>
         )}
 
+        <ThermalReceipt
+          saleId={saleId}
+          sale={sale}
+          items={items}
+          payments={payments}
+          settings={settings}
+        />
       </DialogContent>
     </Dialog>
   )

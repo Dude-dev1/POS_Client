@@ -25,17 +25,31 @@ export async function POST(req: Request) {
       console.error('AI Chat Context Error:', contextError)
     }
 
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
     const { data: recentSales } = await supabase
       .from('sales')
       .select('total_amount, created_at')
+      .gte('created_at', thirtyDaysAgo.toISOString())
       .order('created_at', { ascending: false })
-      .limit(5)
+
+    const { data: recentExpenses } = await supabase
+      .from('expenses')
+      .select('amount, created_at')
+      .gte('created_at', thirtyDaysAgo.toISOString())
+
+    const totalRevenue = (recentSales || []).reduce((sum, s) => sum + s.total_amount, 0)
+    const totalExpenses = (recentExpenses || []).reduce((sum, e) => sum + e.amount, 0)
 
     const context = `
-[Context]
+[Business Context]
+Current Date: ${new Date().toISOString()}
+Last 30 Days Revenue: GHS ${totalRevenue}
+Last 30 Days Expenses: GHS ${totalExpenses}
 Low Stock Products: ${JSON.stringify(lowStockProducts || [])}
-Recent Sales: ${JSON.stringify(recentSales || [])}
-Current Time: ${new Date().toLocaleString()}
+Recent Sales (Sample): ${JSON.stringify((recentSales || []).slice(0, 5))}
+Recent Expenses (Sample): ${JSON.stringify((recentExpenses || []).slice(0, 5))}
 `
 
     console.log('AI Chat: Context fetched. Initializing Gemini...')

@@ -21,45 +21,16 @@ import { useShiftStore } from '@/store/shiftStore'
 import { ShiftManagementModal } from '../pos/ShiftManagementModal'
 import { ThemeToggle } from './ThemeToggle'
 import { AIInventoryAssistant } from '../pos/AIInventoryAssistant'
+import { ConnectivityStatus } from './ConnectivityStatus'
+import { NotificationDropdown } from './NotificationDropdown'
 
 export function Navbar() {
   const { profile, signOut } = useAuthStore()
-  const [unreadNotifications, setUnreadNotifications] = useState(0)
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false)
   const { currentShift } = useShiftStore()
   
   const supabase = createClient()
   const router = useRouter()
-
-  useEffect(() => {
-    // Check initial notification count
-    const fetchNotifications = async () => {
-      const { count } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_read', false)
-      setUnreadNotifications(count || 0)
-    }
-
-    fetchNotifications()
-
-    // Subscribe to real-time notifications
-    const channel = supabase
-      .channel('notifications_changes')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications' },
-        () => {
-          setUnreadNotifications((prev) => prev + 1)
-          toast('New notification', { icon: '🔔' })
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [supabase])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -93,20 +64,14 @@ export function Navbar() {
           <span className="text-xs font-bold">{currentShift ? 'Shift Active' : 'No Active Shift'}</span>
         </Button>
 
-        <ThemeToggle />
-        <AIInventoryAssistant />
+        <div className="hidden lg:block ml-1">
+          <ConnectivityStatus />
+        </div>
 
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          {unreadNotifications > 0 && (
-            <Badge
-              className="absolute -top-1 -right-1 px-1 min-w-[1.2rem] h-[1.2rem] flex items-center justify-center text-[10px]"
-              variant="destructive"
-            >
-              {unreadNotifications > 9 ? '9+' : unreadNotifications}
-            </Badge>
-          )}
-        </Button>
+        <ThemeToggle />
+        {profile?.role !== 'CASHIER' && <AIInventoryAssistant />}
+
+        <NotificationDropdown />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

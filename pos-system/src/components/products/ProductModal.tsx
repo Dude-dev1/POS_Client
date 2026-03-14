@@ -34,6 +34,8 @@ import { toast } from 'react-hot-toast'
 import { Loader2, Plus, Trash2 } from 'lucide-react'
 import { useFieldArray } from 'react-hook-form'
 import { Separator } from '@/components/ui/separator'
+import { Image as ImageIcon, Upload } from 'lucide-react'
+import { ProductImage } from '@/components/shared/ProductImage'
 
 interface ProductModalProps {
   isOpen: boolean
@@ -49,6 +51,7 @@ export function ProductModal({
   product,
 }: ProductModalProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const supabase = createClient()
 
   const form = useForm<ProductFormValues>({
@@ -58,6 +61,7 @@ export function ProductModal({
       description: '',
       sku: '',
       barcode: '',
+      image_url: '',
       category: '',
       price: 0,
       cost_price: 0,
@@ -80,6 +84,7 @@ export function ProductModal({
         description: product.description || '',
         sku: product.sku || '',
         barcode: product.barcode || '',
+        image_url: product.image_url || '',
         category: product.category,
         price: Number(product.price),
         cost_price: Number(product.cost_price || 0),
@@ -96,6 +101,7 @@ export function ProductModal({
         description: '',
         sku: '',
         barcode: '',
+        image_url: '',
         category: '',
         price: 0,
         cost_price: 0,
@@ -106,6 +112,39 @@ export function ProductModal({
       })
     }
   }, [product, form])
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    try {
+      setIsUploading(true)
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random().toString(36).substring(7)}_${Date.now()}.${fileExt}`
+      const filePath = `product_images/${fileName}`
+
+      // Upload to 'products' bucket
+      const { error: uploadError } = await supabase.storage
+        .from('products')
+        .upload(filePath, file)
+
+      if (uploadError) {
+        throw uploadError
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('products')
+        .getPublicUrl(filePath)
+
+      form.setValue('image_url', publicUrl, { shouldValidate: true })
+      toast.success('Image uploaded successfully')
+    } catch (error: any) {
+      console.error('Upload Error:', error)
+      toast.error(error.message || 'Error uploading image. Make sure a "products" storage bucket exists and is public.')
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   const onSubmit = async (values: ProductFormValues) => {
     setIsLoading(true)
@@ -300,6 +339,76 @@ export function ProductModal({
                 </FormItem>
               )}
             />
+
+            <div className="space-y-4 border p-4 rounded-lg bg-muted/10">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                <h3 className="text-sm font-semibold">Product Image</h3>
+              </div>
+              <div className="flex flex-col md:flex-row gap-6 items-start">
+                <div className="w-32 h-32 flex-shrink-0 border rounded-xl overflow-hidden bg-background">
+                  {form.watch('image_url') ? (
+                    <ProductImage src={form.watch('image_url')} alt="Preview" />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground bg-muted/20">
+                      <ImageIcon className="h-8 w-8 mb-2 opacity-50" />
+                      <span className="text-[10px] uppercase">No Image</span>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex-1 space-y-4 w-full">
+                  <FormField
+                    control={form.control}
+                    name="image_url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Image URL</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://example.com/image.jpg" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <Separator className="w-full" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-card px-2 text-muted-foreground">Or</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full relative overflow-hidden"
+                      disabled={isUploading}
+                    >
+                      {isUploading ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Upload className="h-4 w-4 mr-2" />
+                      )}
+                      {isUploading ? 'Uploading...' : 'Upload Image File'}
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        onChange={handleImageUpload}
+                        disabled={isUploading}
+                      />
+                    </Button>
+                    <p className="text-[10px] text-muted-foreground mt-2 text-center">
+                      Max file size: 2MB. Make sure the "products" storage bucket exists in Supabase.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">

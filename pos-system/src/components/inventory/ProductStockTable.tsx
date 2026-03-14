@@ -23,6 +23,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { StockAdjustmentModal } from './StockAdjustmentModal'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { ProductImage } from '@/components/shared/ProductImage'
 import type { Product } from '@/types'
 
 export function ProductStockTable() {
@@ -116,7 +117,17 @@ export function ProductStockTable() {
               filteredProducts.map((product) => (
                 <TableRow key={product.id} className="group hover:bg-muted/50 transition-colors">
                   <TableCell>
-                    <div className="font-medium text-foreground">{product.name}</div>
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 flex-shrink-0">
+                        <ProductImage 
+                          src={product.image_url} 
+                          alt={product.name} 
+                          className="rounded-lg"
+                          size="sm"
+                        />
+                      </div>
+                      <div className="font-medium text-foreground">{product.name}</div>
+                    </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground font-mono text-xs">
                     {product.sku || 'N/A'}

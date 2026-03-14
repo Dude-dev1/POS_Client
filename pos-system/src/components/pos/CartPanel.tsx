@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useCartStore } from '@/store/cartStore'
 import { CartItem } from './CartItem'
 import { CustomerSelector } from './CustomerSelector'
@@ -34,6 +34,14 @@ export function CartPanel() {
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false)
 
   const supabase = createClient()
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll to newly added items
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [items.length])
 
   const handleHold = () => {
     if (items.length === 0) return
@@ -132,10 +140,11 @@ export function CartPanel() {
 
       <CardContent className="flex-1 overflow-y-auto p-0 min-h-0">
         {items.length > 0 ? (
-          <div className="flex flex-col">
+          <div className="flex flex-col relative">
             {items.map((item) => (
               <CartItem key={item.id} item={item} />
             ))}
+            <div ref={scrollRef} />
           </div>
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8">

@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "react-hot-toast";
 
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
+import { ConnectivityProvider } from "@/components/shared/ConnectivityProvider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -32,8 +33,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Toaster position="top-right" />
+          <ConnectivityProvider>
+            {children}
+            <Toaster position="top-right" />
+          </ConnectivityProvider>
         </ThemeProvider>
       </body>
     </html>
