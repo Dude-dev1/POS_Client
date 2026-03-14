@@ -20,6 +20,7 @@ import {
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/authStore'
+import { InstallPrompt } from './InstallPrompt'
 
 const navItems = [
   {
@@ -126,6 +127,8 @@ export function Sidebar() {
           })}
         </ul>
       </div>
+
+      {!isCollapsed && <InstallPrompt />}
 
       <div className="p-4 border-t">
         <Button

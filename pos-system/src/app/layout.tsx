@@ -1,22 +1,32 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import { ConnectivityProvider } from "@/components/shared/ConnectivityProvider";
+import { PWARegistration } from "../components/shared/PWARegistration";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "POS Master Pro",
-  description: "Next.js 14 Point of Sale System with Supabase",
+  description: "Next.js Point of Sale System with AI Insights",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "POS Master Pro",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#06b6d4",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -34,6 +44,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ConnectivityProvider>
+            <PWARegistration />
             {children}
             <Toaster position="top-right" />
           </ConnectivityProvider>

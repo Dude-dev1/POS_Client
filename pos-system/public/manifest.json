@@ -1,21 +1,37 @@
 {
   "name": "POS Master Pro",
   "short_name": "POS Master",
-  "description": "Production-Grade Point of Sale System",
+  "description": "Production-Grade Point of Sale System with AI Insights",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "theme_color": "#06b6d4",
+  "orientation": "any",
+  "categories": ["business", "finance", "productivity"],
   "icons": [
     {
       "src": "/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "POS Screen",
+      "url": "/pos",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
     }
   ]
 }
