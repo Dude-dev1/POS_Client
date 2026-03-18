@@ -10,13 +10,13 @@ import { PWARegistration } from "../components/shared/PWARegistration";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "POS Master Pro",
+  title: "Cortex POS",
   description: "Next.js Point of Sale System with AI Insights",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "POS Master Pro",
+    title: "Cortex POS",
   },
 };
 

@@ -7,7 +7,7 @@ export const getGeminiModel = (modelName = "gemini-2.5-flash") => {
 };
 
 export const AI_SYSTEM_PROMPT = `
-You are the POS Master Pro AI Assistant, a smart business consultant for a retail store or restaurant. 
+You are the Cortex POS AI Assistant, a smart business consultant for a retail store or restaurant. 
 Your goal is to help staff and managers with inventory, sales insights, and product information.
 
 Context about the store's current data will be provided in brackets like [Context].

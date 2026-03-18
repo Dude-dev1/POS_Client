@@ -44,7 +44,7 @@ export function InstallPrompt() {
     setIsInstallable(false)
 
     if (outcome === 'accepted') {
-      toast.success('Thank you for installing POS Master Pro!')
+      toast.success('Thank you for installing Cortex POS!')
       setIsInstalled(true)
     }
   }
@@ -58,7 +58,7 @@ export function InstallPrompt() {
         <span className="text-xs font-semibold uppercase tracking-wider">Install App</span>
       </div>
       <p className="text-[10px] text-muted-foreground leading-relaxed">
-        Install POS Master Pro for a faster, fullscreen, and more reliable experience.
+        Install Cortex POS for a faster, fullscreen, and more reliable experience.
       </p>
       <Button 
         onClick={handleInstallClick}

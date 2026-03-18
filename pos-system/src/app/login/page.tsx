@@ -122,7 +122,7 @@ export default function LoginPage() {
           <div className="p-2.5 bg-primary rounded-xl shadow-md">
             <ShoppingCart className="h-6 w-6 text-primary-foreground" />
           </div>
-          <span className="font-bold text-2xl tracking-tight">POS Master Pro</span>
+          <span className="font-bold text-2xl tracking-tight">Cortex POS</span>
         </div>
 
         <Card className="shadow-lg border-t-4 border-t-primary">
