@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { Product } from '@/types'
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Product } from "@/types";
 import {
   Table,
   TableBody,
@@ -10,16 +10,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   MoreHorizontal,
   Pencil,
@@ -28,70 +28,84 @@ import {
   Search,
   Filter,
   Plus,
-} from 'lucide-react'
-import { formatCurrency } from '@/utils/formatCurrency'
-import { Badge } from '@/components/ui/badge'
-import { ProductModal } from './ProductModal'
-import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
-import { BarcodeDisplay } from './BarcodeDisplay'
+} from "lucide-react";
+import { formatCurrency } from "@/utils/formatCurrency";
+import { Badge } from "@/components/ui/badge";
+import { ProductModal } from "./ProductModal";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { BarcodeDisplay } from "./BarcodeDisplay";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { toast } from 'react-hot-toast'
+} from "@/components/ui/dialog";
+import { toast } from "react-hot-toast";
 
 export function ProductTable() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [isBarcodeOpen, setIsBarcodeOpen] = useState(false)
-  const [productToDelete, setProductToDelete] = useState<Product | null>(null)
-  const [productForBarcode, setProductForBarcode] = useState<Product | null>(null)
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isBarcodeOpen, setIsBarcodeOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [productForBarcode, setProductForBarcode] = useState<Product | null>(
+    null
+  );
 
-  const supabase = createClient()
+  const supabase = createClient();
 
   const fetchProducts = async () => {
-    setLoading(true)
+    setLoading(true);
     const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('name')
-    if (data) setProducts(data)
-    setLoading(false)
-  }
+      .from("products")
+      .select(
+        `
+        *,
+        product_variants (
+          id,
+          name,
+          sku,
+          price,
+          quantity
+        )
+      `
+      )
+      .order("name");
+    if (data) setProducts(data as Product[]);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    fetchProducts()
-  }, [])
+    fetchProducts();
+  }, []);
 
   const handleDelete = async () => {
-    if (!productToDelete) return
+    if (!productToDelete) return;
     try {
       const { error } = await supabase
-        .from('products')
+        .from("products")
         .delete()
-        .eq('id', productToDelete.id)
-      if (error) throw error
-      toast.success('Product deleted successfully')
-      fetchProducts()
+        .eq("id", productToDelete.id);
+      if (error) throw error;
+      toast.success("Product deleted successfully");
+      fetchProducts();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete product')
+      toast.error(error.message || "Failed to delete product");
     } finally {
-      setIsDeleteDialogOpen(false)
-      setProductToDelete(null)
+      setIsDeleteDialogOpen(false);
+      setProductToDelete(null);
     }
-  }
+  };
 
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.sku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.barcode?.includes(searchTerm)
-  )
+  const filteredProducts = products.filter(
+    (p) =>
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.sku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.barcode?.includes(searchTerm)
+  );
 
   return (
     <div className="space-y-4">
@@ -105,7 +119,12 @@ export function ProductTable() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button onClick={() => { setSelectedProduct(null); setIsModalOpen(true); }}>
+        <Button
+          onClick={() => {
+            setSelectedProduct(null);
+            setIsModalOpen(true);
+          }}
+        >
           <Plus className="mr-2 h-4 w-4" /> Add Product
         </Button>
       </div>
@@ -126,7 +145,10 @@ export function ProductTable() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                <TableCell
+                  colSpan={7}
+                  className="text-center py-10 text-muted-foreground"
+                >
                   Loading products...
                 </TableCell>
               </TableRow>
@@ -144,21 +166,33 @@ export function ProductTable() {
                     </div>
                   </TableCell>
                   <TableCell>{product.category}</TableCell>
-                  <TableCell className="font-mono text-xs">{product.sku || '-'}</TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {product.sku || "-"}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <span className={product.quantity <= product.low_stock_threshold ? 'text-red-500 font-bold' : ''}>
+                      <span
+                        className={
+                          product.quantity <= product.low_stock_threshold
+                            ? "text-red-500 font-bold"
+                            : ""
+                        }
+                      >
                         {product.quantity}
                       </span>
                       {product.quantity <= product.low_stock_threshold && (
-                        <Badge variant="warning" className="text-[10px]">Low</Badge>
+                        <Badge variant="warning" className="text-[10px]">
+                          Low
+                        </Badge>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="font-bold">{formatCurrency(product.price)}</TableCell>
+                  <TableCell className="font-bold">
+                    {formatCurrency(product.price)}
+                  </TableCell>
                   <TableCell>
-                    <Badge variant={product.is_active ? 'success' : 'outline'}>
-                      {product.is_active ? 'Active' : 'Inactive'}
+                    <Badge variant={product.is_active ? "success" : "outline"}>
+                      {product.is_active ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
@@ -170,13 +204,30 @@ export function ProductTable() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => { setSelectedProduct(product); setIsModalOpen(true); }}>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedProduct(product);
+                            setIsModalOpen(true);
+                          }}
+                        >
                           <Pencil className="mr-2 h-4 w-4 text-blue-500" /> Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => { setProductForBarcode(product); setIsBarcodeOpen(true); }}>
-                          <BarcodeIcon className="mr-2 h-4 w-4 text-purple-500" /> Barcode
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setProductForBarcode(product);
+                            setIsBarcodeOpen(true);
+                          }}
+                        >
+                          <BarcodeIcon className="mr-2 h-4 w-4 text-purple-500" />{" "}
+                          Barcode
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600" onClick={() => { setProductToDelete(product); setIsDeleteDialogOpen(true); }}>
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => {
+                            setProductToDelete(product);
+                            setIsDeleteDialogOpen(true);
+                          }}
+                        >
                           <Trash2 className="mr-2 h-4 w-4" /> Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -186,7 +237,10 @@ export function ProductTable() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                <TableCell
+                  colSpan={7}
+                  className="text-center py-10 text-muted-foreground"
+                >
                   No products found.
                 </TableCell>
               </TableRow>
@@ -197,7 +251,10 @@ export function ProductTable() {
 
       <ProductModal
         isOpen={isModalOpen}
-        onClose={() => { setIsModalOpen(false); setSelectedProduct(null); }}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedProduct(null);
+        }}
         onSuccess={fetchProducts}
         product={selectedProduct}
       />
@@ -215,7 +272,9 @@ export function ProductTable() {
       <Dialog open={isBarcodeOpen} onOpenChange={setIsBarcodeOpen}>
         <DialogContent className="max-w-fit">
           <DialogHeader>
-            <DialogTitle>Product Barcode - {productForBarcode?.name}</DialogTitle>
+            <DialogTitle>
+              Product Barcode - {productForBarcode?.name}
+            </DialogTitle>
           </DialogHeader>
           {productForBarcode?.barcode ? (
             <BarcodeDisplay value={productForBarcode.barcode} />
@@ -227,5 +286,5 @@ export function ProductTable() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

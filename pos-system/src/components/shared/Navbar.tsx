@@ -44,7 +44,6 @@ export function Navbar() {
         <Button variant="ghost" size="icon" className="md:hidden">
           <Menu className="h-5 w-5" />
         </Button>
-        <span className="font-bold text-xl hidden md:block">Cortex POS</span>
       </div>
 
       <div className="flex items-center gap-2">

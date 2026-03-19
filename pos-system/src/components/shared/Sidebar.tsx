@@ -101,8 +101,14 @@ export function Sidebar() {
         isCollapsed ? "w-16" : "w-64"
       )}
     >
-      <div className="p-4 flex-1 overflow-y-auto overflow-x-hidden">
-        <ul className="space-y-2">
+      <div className="flex-1 overflow-y-hidden overflow-x-hidden">
+        <div className="flex items-center justify-start gap-3 h-16 border-b border-border w-full px-4">
+          <span className="font-bold text-xl text-popover-foreground">
+            Cortex POS
+          </span>
+          <ShoppingCart className="h-5 w-5 shrink-0" />
+        </div>
+        <ul className="p-4 space-y-2">
           {filteredNavItems.map((item) => {
             const isActive = pathname === item.href;
             return (

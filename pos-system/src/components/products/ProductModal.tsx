@@ -1,19 +1,19 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { productSchema, ProductFormValues } from '@/lib/validations'
-import { Product } from '@/types'
-import { createClient } from '@/lib/supabase/client'
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { productSchema, ProductFormValues } from "@/lib/validations";
+import { Product } from "@/types";
+import { createClient } from "@/lib/supabase/client";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -21,27 +21,27 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '../ui/form'
-import { Input } from '@/components/ui/input'
+} from "../ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { toast } from 'react-hot-toast'
-import { Loader2, Plus, Trash2 } from 'lucide-react'
-import { useFieldArray } from 'react-hook-form'
-import { Separator } from '@/components/ui/separator'
-import { Image as ImageIcon, Upload } from 'lucide-react'
-import { ProductImage } from '@/components/shared/ProductImage'
+} from "@/components/ui/select";
+import { toast } from "react-hot-toast";
+import { Loader2, Plus, Trash2 } from "lucide-react";
+import { useFieldArray } from "react-hook-form";
+import { Separator } from "@/components/ui/separator";
+import { Image as ImageIcon, Upload } from "lucide-react";
+import { ProductImage } from "@/components/shared/ProductImage";
 
 interface ProductModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onSuccess: () => void
-  product?: Product | null
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  product?: Product | null;
 }
 
 export function ProductModal({
@@ -50,19 +50,19 @@ export function ProductModal({
   onSuccess,
   product,
 }: ProductModalProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
-  const supabase = createClient()
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const supabase = createClient();
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema) as any,
     defaultValues: {
-      name: '',
-      description: '',
-      sku: '',
-      barcode: '',
-      image_url: '',
-      category: '',
+      name: "",
+      description: "",
+      sku: "",
+      barcode: "",
+      image_url: "",
+      category: "",
       price: 0,
       cost_price: 0,
       quantity: 0,
@@ -70,115 +70,198 @@ export function ProductModal({
       is_active: true,
       variants: [],
     },
-  })
+  });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: 'variants',
-  })
+    name: "variants",
+  });
 
   useEffect(() => {
     if (product) {
       form.reset({
         name: product.name,
-        description: product.description || '',
-        sku: product.sku || '',
-        barcode: product.barcode || '',
-        image_url: product.image_url || '',
+        description: product.description || "",
+        sku: product.sku || "",
+        barcode: product.barcode || "",
+        image_url: product.image_url || "",
         category: product.category,
         price: Number(product.price),
         cost_price: Number(product.cost_price || 0),
         quantity: product.quantity,
         low_stock_threshold: product.low_stock_threshold,
-        variants: (product.variants || []).map(v => ({
+        variants: (product.variants || []).map((v) => ({
           ...v,
-          sku: v.sku || '',
+          sku: v.sku || "",
         })),
-      })
+      });
     } else {
       form.reset({
-        name: '',
-        description: '',
-        sku: '',
-        barcode: '',
-        image_url: '',
-        category: '',
+        name: "",
+        description: "",
+        sku: "",
+        barcode: "",
+        image_url: "",
+        category: "",
         price: 0,
         cost_price: 0,
         quantity: 0,
         low_stock_threshold: 5,
         is_active: true,
         variants: [],
-      })
+      });
     }
-  }, [product, form])
+  }, [product, form]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     try {
-      setIsUploading(true)
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Math.random().toString(36).substring(7)}_${Date.now()}.${fileExt}`
-      const filePath = `product_images/${fileName}`
+      setIsUploading(true);
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Math.random()
+        .toString(36)
+        .substring(7)}_${Date.now()}.${fileExt}`;
+      const filePath = `product_images/${fileName}`;
 
       // Upload to 'products' bucket
       const { error: uploadError } = await supabase.storage
-        .from('products')
-        .upload(filePath, file)
+        .from("products")
+        .upload(filePath, file);
 
       if (uploadError) {
-        throw uploadError
+        throw uploadError;
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('products')
-        .getPublicUrl(filePath)
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("products").getPublicUrl(filePath);
 
-      form.setValue('image_url', publicUrl, { shouldValidate: true })
-      toast.success('Image uploaded successfully')
+      form.setValue("image_url", publicUrl, { shouldValidate: true });
+      toast.success("Image uploaded successfully");
     } catch (error: any) {
-      console.error('Upload Error:', error)
-      toast.error(error.message || 'Error uploading image. Make sure a "products" storage bucket exists and is public.')
+      console.error("Upload Error:", error);
+      toast.error(
+        error.message ||
+          'Error uploading image. Make sure a "products" storage bucket exists and is public.'
+      );
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
     }
-  }
+  };
 
   const onSubmit = async (values: ProductFormValues) => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
+      // Separate variants from product values
+      const { variants, ...productData } = values;
+      let productId = product?.id;
+
+      // Save/update product (without variants)
       if (product) {
         const { error } = await supabase
-          .from('products')
-          .update(values)
-          .eq('id', product.id)
-        if (error) throw error
-        toast.success('Product updated successfully')
+          .from("products")
+          .update(productData)
+          .eq("id", product.id);
+        if (error) throw error;
       } else {
-        const { error } = await supabase.from('products').insert(values)
-        if (error) throw error
-        toast.success('Product created successfully')
+        const { data, error } = await supabase
+          .from("products")
+          .insert([productData])
+          .select("id");
+        if (error) throw error;
+        productId = data?.[0]?.id;
       }
-      onSuccess()
-      onClose()
+
+      // Handle variants if product was successfully created/updated
+      if (productId) {
+        const variantsToProcess = variants || [];
+        const existingVariantIds = new Set(
+          product?.variants?.map((v) => v.id) || []
+        );
+        const processedVariantIds = new Set();
+
+        // Insert new or update existing variants
+        for (const variant of variantsToProcess) {
+          const isNewVariant =
+            !variant.id ||
+            (typeof variant.id === "string" && variant.id.startsWith("new_"));
+
+          if (
+            !isNewVariant &&
+            variant.id &&
+            existingVariantIds.has(variant.id)
+          ) {
+            // Update existing variant
+            const { error } = await supabase
+              .from("product_variants")
+              .update({
+                name: variant.name,
+                sku: variant.sku || null,
+                price: variant.price,
+                quantity: variant.quantity || 0,
+              })
+              .eq("id", variant.id);
+            if (error) throw error;
+            processedVariantIds.add(variant.id);
+          } else if (isNewVariant) {
+            // Insert new variant
+            const { error } = await supabase.from("product_variants").insert([
+              {
+                product_id: productId,
+                name: variant.name,
+                sku: variant.sku || null,
+                price: variant.price,
+                quantity: variant.quantity || 0,
+              },
+            ]);
+            if (error) throw error;
+          }
+        }
+
+        // Delete variants that were removed
+        const variantsToDelete = Array.from(existingVariantIds).filter(
+          (id) => !processedVariantIds.has(id)
+        );
+        if (variantsToDelete.length > 0) {
+          const { error } = await supabase
+            .from("product_variants")
+            .delete()
+            .in("id", variantsToDelete);
+          if (error) throw error;
+        }
+      }
+
+      toast.success(
+        product
+          ? "Product updated successfully"
+          : "Product created successfully"
+      );
+      onSuccess();
+      onClose();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to save product')
+      console.error("Submit error:", error);
+      toast.error(error.message || "Failed to save product");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+          <DialogTitle>
+            {product ? "Edit Product" : "Add New Product"}
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit as any)}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -233,7 +316,9 @@ export function ProductModal({
                         type="number"
                         step="0.01"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                        onChange={(e) =>
+                          field.onChange(parseFloat(e.target.value))
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -252,7 +337,9 @@ export function ProductModal({
                         type="number"
                         step="0.01"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                        onChange={(e) =>
+                          field.onChange(parseFloat(e.target.value))
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -298,7 +385,9 @@ export function ProductModal({
                       <Input
                         type="number"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value))
+                        }
                         disabled={!!product} // Quantity should be adjusted via Inventory, not Edit
                       />
                     </FormControl>
@@ -317,7 +406,9 @@ export function ProductModal({
                       <Input
                         type="number"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value))
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -347,8 +438,8 @@ export function ProductModal({
               </div>
               <div className="flex flex-col md:flex-row gap-6 items-start">
                 <div className="w-32 h-32 flex-shrink-0 border rounded-xl overflow-hidden bg-background">
-                  {form.watch('image_url') ? (
-                    <ProductImage src={form.watch('image_url')} alt="Preview" />
+                  {form.watch("image_url") ? (
+                    <ProductImage src={form.watch("image_url")} alt="Preview" />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground bg-muted/20">
                       <ImageIcon className="h-8 w-8 mb-2 opacity-50" />
@@ -356,7 +447,7 @@ export function ProductModal({
                     </div>
                   )}
                 </div>
-                
+
                 <div className="flex-1 space-y-4 w-full">
                   <FormField
                     control={form.control}
@@ -365,26 +456,31 @@ export function ProductModal({
                       <FormItem>
                         <FormLabel>Image URL</FormLabel>
                         <FormControl>
-                          <Input placeholder="https://example.com/image.jpg" {...field} />
+                          <Input
+                            placeholder="https://example.com/image.jpg"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
                       <Separator className="w-full" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-card px-2 text-muted-foreground">Or</span>
+                      <span className="bg-card px-2 text-muted-foreground">
+                        Or
+                      </span>
                     </div>
                   </div>
 
                   <div>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       className="w-full relative overflow-hidden"
                       disabled={isUploading}
                     >
@@ -393,9 +489,9 @@ export function ProductModal({
                       ) : (
                         <Upload className="h-4 w-4 mr-2" />
                       )}
-                      {isUploading ? 'Uploading...' : 'Upload Image File'}
-                      <input 
-                        type="file" 
+                      {isUploading ? "Uploading..." : "Upload Image File"}
+                      <input
+                        type="file"
                         accept="image/*"
                         className="absolute inset-0 opacity-0 cursor-pointer"
                         onChange={handleImageUpload}
@@ -403,7 +499,8 @@ export function ProductModal({
                       />
                     </Button>
                     <p className="text-[10px] text-muted-foreground mt-2 text-center">
-                      Max file size: 2MB. Make sure the "products" storage bucket exists in Supabase.
+                      Max file size: 2MB. Make sure the "products" storage
+                      bucket exists in Supabase.
                     </p>
                   </div>
                 </div>
@@ -412,28 +509,43 @@ export function ProductModal({
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Product Variants</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  Product Variants
+                </h3>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => append({ id: Math.random().toString(36).substring(7), name: '', sku: '', price: form.getValues('price'), quantity: 0 })}
+                  onClick={() =>
+                    append({
+                      id: `new_${Date.now()}`,
+                      name: "",
+                      sku: "",
+                      price: form.getValues("price"),
+                      quantity: 0,
+                    })
+                  }
                 >
                   <Plus className="mr-2 h-4 w-4" /> Add Variant
                 </Button>
               </div>
               <Separator />
-              
+
               <div className="space-y-3">
                 {fields.map((field, index) => (
-                  <div key={field.id} className="grid grid-cols-12 gap-2 items-end border p-3 rounded-lg bg-gray-50/50">
+                  <div
+                    key={field.id}
+                    className="grid grid-cols-12 gap-2 items-end border p-3 rounded-lg bg-gray-50/50"
+                  >
                     <div className="col-span-4">
                       <FormField
                         control={form.control}
                         name={`variants.${index}.name`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[10px] uppercase">Name (e.g. XL, Blue)</FormLabel>
+                            <FormLabel className="text-[10px] uppercase">
+                              Name (e.g. XL, Blue)
+                            </FormLabel>
                             <FormControl>
                               <Input className="h-8 text-xs" {...field} />
                             </FormControl>
@@ -448,9 +560,14 @@ export function ProductModal({
                         name={`variants.${index}.sku`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[10px] uppercase">SKU</FormLabel>
+                            <FormLabel className="text-[10px] uppercase">
+                              SKU
+                            </FormLabel>
                             <FormControl>
-                              <Input className="h-8 text-xs font-mono" {...field} />
+                              <Input
+                                className="h-8 text-xs font-mono"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage className="text-[10px]" />
                           </FormItem>
@@ -463,9 +580,16 @@ export function ProductModal({
                         name={`variants.${index}.price`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[10px] uppercase">Price</FormLabel>
+                            <FormLabel className="text-[10px] uppercase">
+                              Price
+                            </FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" className="h-8 text-xs" {...field} />
+                              <Input
+                                type="number"
+                                step="0.01"
+                                className="h-8 text-xs"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage className="text-[10px]" />
                           </FormItem>
@@ -478,12 +602,14 @@ export function ProductModal({
                         name={`variants.${index}.quantity`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[10px] uppercase">Qty</FormLabel>
+                            <FormLabel className="text-[10px] uppercase">
+                              Qty
+                            </FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
-                                className="h-8 text-xs" 
-                                {...field} 
+                              <Input
+                                type="number"
+                                className="h-8 text-xs"
+                                {...field}
                                 disabled={!!product} // Quantity adjusted via inventory
                               />
                             </FormControl>
@@ -509,17 +635,22 @@ export function ProductModal({
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isLoading}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {product ? 'Update Product' : 'Add Product'}
+                {product ? "Update Product" : "Add Product"}
               </Button>
             </DialogFooter>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
