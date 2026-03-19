@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Open_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 
@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import { ConnectivityProvider } from "@/components/shared/ConnectivityProvider";
 import { PWARegistration } from "../components/shared/PWARegistration";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const openSans = Open_Sans({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: "Cortex POS",
@@ -36,7 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${openSans.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
