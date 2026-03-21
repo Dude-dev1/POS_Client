@@ -46,7 +46,7 @@ export function AIAnalyticsDashboard() {
 
   if (loading) {
     return (
-      <Card className="col-span-full xl:col-span-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent relative overflow-hidden">
+      <Card className="col-span-full border-primary/20 bg-gradient-to-br from-primary/5 to-transparent relative overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:14px_24px]"></div>
         <CardContent className="h-64 flex flex-col items-center justify-center gap-4 relative z-10">
           <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -58,7 +58,7 @@ export function AIAnalyticsDashboard() {
 
   if (!analysis) {
     return (
-      <Card className="col-span-full xl:col-span-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+      <Card className="col-span-full border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
         <CardContent className="h-64 flex flex-col items-center justify-center gap-4">
           <Sparkles className="h-10 w-10 text-muted-foreground" />
           <p className="text-sm font-medium text-muted-foreground text-center max-w-sm">No analysis available. Click below to generate fresh insights.</p>
@@ -69,7 +69,7 @@ export function AIAnalyticsDashboard() {
   }
 
   return (
-    <Card className="col-span-full xl:col-span-2 border-primary/30 shadow-md relative overflow-hidden group">
+    <Card className="col-span-full border-primary/30 shadow-md relative overflow-hidden group">
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-bl-full -z-10 group-hover:scale-110 transition-transform duration-500"></div>
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
@@ -85,10 +85,10 @@ export function AIAnalyticsDashboard() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <CardContent className="grid grid-cols-1 md:grid-cols-5 gap-6">
         
         {/* Profit Forecast */}
-        <div className="space-y-4">
+        <div className="md:col-span-2 space-y-4">
           <h3 className="font-semibold flex items-center gap-2 text-sm text-muted-foreground uppercase tracking-wider">
             Profit Forecast
           </h3>
@@ -118,7 +118,7 @@ export function AIAnalyticsDashboard() {
         </div>
 
         {/* Dead Stock Analysis */}
-        <div className="space-y-4">
+        <div className="md:col-span-3 space-y-4">
           <h3 className="font-semibold flex items-center gap-2 text-sm text-muted-foreground uppercase tracking-wider">
             <AlertTriangle className="h-4 w-4" />
             Dead Stock Alerts

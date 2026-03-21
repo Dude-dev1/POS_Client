@@ -102,12 +102,16 @@ export function Sidebar() {
       )}
     >
       <div className="flex-1 overflow-y-hidden overflow-x-hidden">
-        <div className="flex items-center justify-start gap-3 h-16 border-b border-border w-full px-4">
-          <span className="font-bold text-xl text-popover-foreground">
-            Cortex POS
-          </span>
-          <ShoppingCart className="h-5 w-5 shrink-0" />
-        </div>
+        {!isCollapsed && (
+          <div className="flex-1 overflow-y-hidden overflow-x-hidden">
+            <div className="flex items-center justify-start gap-3 h-16 border-b border-border w-full px-4">
+              <span className="font-bold text-xl text-popover-foreground">
+                Cortex POS
+              </span>
+              <ShoppingCart className="h-5 w-5 shrink-0" />
+            </div>
+          </div>
+        )}
         <ul className="p-4 space-y-2">
           {filteredNavItems.map((item) => {
             const isActive = pathname === item.href;
