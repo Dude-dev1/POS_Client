@@ -116,8 +116,26 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
     if (!profile) return
     
     const activeShift = useShiftStore.getState().currentShift
-    if (!activeShift) {
+    if (!activeShift || !activeShift.id) {
       toast.error('You must open a shift before making a sale!')
+      return
+    }
+
+    // Check if shift is still active in database
+    try {
+      const { data: shiftData, error: shiftError } = await supabase
+        .from('shifts')
+        .select('id, status')
+        .eq('id', activeShift.id)
+        .single()
+
+      if (shiftError || !shiftData || shiftData.status !== 'OPEN') {
+        useShiftStore.getState().setCurrentShift(null)
+        toast.error('Active shift not found or already closed. Please open a new shift.')
+        return
+      }
+    } catch (error) {
+      toast.error('Cannot verify shift. Please open a new shift.')
       return
     }
     
@@ -201,7 +219,14 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
         .select()
         .single()
 
-      if (saleError) throw saleError
+      if (saleError) {
+        if (saleError.code === '23503') {
+          // Foreign key constraint error
+          toast.error('Shift not found. Please open a new shift and try again.')
+          useShiftStore.getState().setCurrentShift(null)
+        }
+        throw saleError
+      }
 
       // 2. Create Sale Items
       const saleItems = items.map((item) => ({

@@ -87,21 +87,39 @@ export function ShiftManagementModal({ isOpen, onClose }: ShiftManagementModalPr
     if (!profile) return
     setIsLoading(true)
     try {
+      // First, check if user already has an open shift
+      const { data: existingShift } = await supabase
+        .from('shifts')
+        .select('id, user_id, status')
+        .eq('user_id', profile.id)
+        .eq('status', 'OPEN')
+        .single()
+
+      if (existingShift) {
+        setCurrentShift(existingShift)
+        toast.info('Shift already open')
+        return
+      }
+
+      // Create new shift
       const { data, error } = await supabase
         .from('shifts')
         .insert({
           user_id: profile.id,
-          opening_cash: parseFloat(openingCash),
+          opening_cash: parseFloat(openingCash) || 0,
           status: 'OPEN'
         })
         .select()
         .single()
 
       if (error) throw error
+      if (!data) throw new Error('Failed to create shift - no data returned')
+      
       setCurrentShift(data)
       toast.success('Shift opened successfully')
     } catch (error: any) {
       toast.error(error.message || 'Failed to open shift')
+      console.error('Shift open error:', error)
     } finally {
       setIsLoading(false)
     }
