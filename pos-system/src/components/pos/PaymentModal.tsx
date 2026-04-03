@@ -586,8 +586,8 @@ export function PaymentModal({ isOpen, onClose }: PaymentModalProps) {
               className="w-full"
             >
               <TabsList
-                className={`grid w-full h-10 mb-4 ${
-                  customerId ? "grid-cols-4" : "grid-cols-3"
+                className={`grid w-full h-auto mb-4 p-1 gap-1 ${
+                  customerId ? "grid-cols-3 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-4"
                 }`}
               >
                 <TabsTrigger value="CASH">Cash</TabsTrigger>
