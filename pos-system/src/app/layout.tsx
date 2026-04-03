@@ -10,13 +10,40 @@ import { PWARegistration } from "../components/shared/PWARegistration";
 const openSans = Open_Sans({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "Cortex POS",
-  description: "Next.js Point of Sale System with AI Insights",
+  metadataBase: new URL("https://cortex-pos.vercel.app"),
+  title: {
+    template: "%s | Cortex POS",
+    default: "Cortex POS - AI-Powered Point of Sale System",
+  },
+  description: "Advanced Point of Sale System powered by Next.js and AI insights. Manage your inventory, sales, and customers efficiently.",
+  keywords: ["POS", "Point of Sale", "Inventory Management", "AI POS", "Next.js POS", "Sales Tracking", "Retail Software"],
+  authors: [{ name: "Cortex Team" }],
+  creator: "Cortex Team",
+  publisher: "Cortex Team",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Cortex POS",
+  },
+  openGraph: {
+    title: "Cortex POS - AI-Powered Point of Sale System",
+    description: "Advanced Point of Sale System powered by Next.js and AI insights.",
+    url: "https://cortex-pos.vercel.app",
+    siteName: "Cortex POS",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Cortex POS - AI-Powered Point of Sale System",
+    description: "Advanced Point of Sale System powered by Next.js and AI insights.",
+    creator: "@cortexpos",
   },
 };
 
