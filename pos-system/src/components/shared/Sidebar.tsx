@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/authStore'
 import { InstallPrompt } from './InstallPrompt'
 
-const navItems = [
+export const navItems = [
   // {
   //   title: "POS",
   //   href: "/pos",
