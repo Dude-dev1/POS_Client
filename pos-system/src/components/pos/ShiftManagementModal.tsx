@@ -104,10 +104,10 @@ export function ShiftManagementModal({
       // First, check if user already has an open shift
       const { data: existingShift } = await supabase
         .from("shifts")
-        .select("id, user_id, status")
+        .select("*")
         .eq("user_id", profile.id)
         .eq("status", "OPEN")
-        .single();
+        .maybeSingle();
 
       if (existingShift) {
         setCurrentShift(existingShift);
