@@ -3,8 +3,8 @@ import { CartPanel } from '@/components/pos/CartPanel'
 
 export default function POSPage() {
   return (
-    <div className="flex flex-col h-[calc(100vh-130px)] md:flex-row gap-6">
-      <div className="flex-1 h-full min-h-0">
+    <div className="flex flex-col md:h-[calc(100vh-130px)] md:flex-row gap-6">
+      <div className="flex-1 md:h-full min-h-[500px] md:min-h-0">
         <div className="h-full flex flex-col bg-card text-card-foreground rounded-lg border border-border shadow-sm p-4">
           <header className="mb-4">
             <h1 className="text-2xl font-bold tracking-tight">Point of Sale</h1>
@@ -16,7 +16,7 @@ export default function POSPage() {
         </div>
       </div>
       
-      <div className="w-full md:w-[400px] shrink-0 h-full">
+      <div className="w-full md:w-[400px] shrink-0 md:h-full min-h-[500px]">
         <CartPanel />
       </div>
     </div>
