@@ -26,14 +26,14 @@ export function BarcodeScannerModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-black border-none p-0 overflow-hidden">
-        <DialogHeader className="p-4 bg-gray-900 absolute top-0 left-0 right-0 z-10 bg-opacity-80">
-          <DialogTitle className="text-white flex items-center justify-between">
+      <DialogContent className="sm:max-w-md bg-background border-border p-0 overflow-hidden">
+        <DialogHeader className="p-4 bg-background/80 backdrop-blur-sm absolute top-0 left-0 right-0 z-10">
+          <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Camera className="h-5 w-5 text-primary" />
               Scan Barcode
             </div>
-            <Button variant="ghost" size="icon" onClick={onClose} className="text-white hover:bg-black/50 h-8 w-8">
+            <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-muted h-8 w-8">
               <X className="h-4 w-4" />
             </Button>
           </DialogTitle>
@@ -70,7 +70,7 @@ export function BarcodeScannerModal({
           )}
         </div>
         
-        <div className="p-6 bg-gray-900 text-center text-white/70 text-sm">
+        <div className="p-6 bg-muted/80 text-center text-muted-foreground text-sm border-t border-border">
           Align the barcode within the central frame to scan.
         </div>
       </DialogContent>
